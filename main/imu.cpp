@@ -26,21 +26,24 @@ constexpr int32_t MAG_CD_US = 1e6 / MAG_FREQ;
 constexpr int32_t ACCEL_FREQ = 60;
 constexpr int32_t ACCEL_CD_US = 1e6 / ACCEL_FREQ;
 
+constexpr int32_t DEBUG_FREQ = 60;
+constexpr int32_t DEBUG_CD_US = 1e6 / DEBUG_FREQ;
+
 void sensor_manager(void* pvParameters) {
     IMU imu;
     imu.init_mag();
     imu.init_accel();
 
-    vTaskDelay(pdMS_TO_TICKS(1000));
     imu.read_mag();
     imu.read_accel();
-
     imu.init_gyro();  // init gyro last since it needs accel/mag data
 
     // create timers
     Timer gyro_timer(GYRO_CD_US);
     Timer mag_timer(MAG_CD_US);
     Timer accel_timer(ACCEL_CD_US);
+
+    Timer debug_timer(DEBUG_CD_US);
 
     // sensor loop
     while (true) {
@@ -57,6 +60,9 @@ void sensor_manager(void* pvParameters) {
         if (accel_timer.should_run(delta_time_us)) {
             imu.read_accel();
             imu.update_accel_err();
+        }
+        if (debug_timer.should_run(delta_time_us)) {
+            Quat::from_data(imu.get_accel(), imu.get_mag()).disp();
         }
         taskYIELD();
     }

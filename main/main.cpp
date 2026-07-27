@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "i2c.hpp"
 #include "motor.cpp"
 #include "imu.cpp"
 
@@ -18,7 +19,7 @@ void app_main(void) {
     //     vTaskDelay(pdMS_TO_TICKS(100));
     // }
 
-    // init
+    // init I2C
     init_i2c_bus();
 
     // set up sensors

@@ -9,15 +9,20 @@
 // Magnetometer: QMC5883L, (10, 50, 100, or 200 Hz)
 // Gyroscope: ITG3205, (1 or 8 kHz)
 // Accelerometer: ADXL345, (800 Hz max)
+constexpr uint16_t GYRO_ADDR = 0b1101000;
+constexpr uint16_t ACCEL_ADDR = 0x53;  // 0x1D or 0x53
+constexpr uint16_t MAG_ADDR = 0x0D;
 
-#define DEBUG_ACCEL true
-#define DEBUG_MAG true
-#define DEBUG_GYRO true
+#define DEBUG_ACCEL false
+#define DEBUG_MAG false
+#define DEBUG_GYRO false
 
 class Timer {
    public:
     Timer(int32_t cd_us) { cooldown = cd_us; }
 
+    // checks whether the cooldown has expired
+    // returns the delta time
     bool should_run(int64_t& delta_time_us) {
         int64_t current_time = esp_timer_get_time();
 
@@ -56,8 +61,10 @@ class IMU {
     void update_error();
     Vec3 calc_alt();
 
-    const Vec3& get_accel() { return accel_data; }
-    const Vec3& get_mag() { return mag_data; }
+    const Vec3& get_accel() const { return accel_data; }
+    const Vec3& get_mag() const { return mag_data; }
+
+    const Quat& get_quat() const { return quat; }
 
    private:
     I2CDevice accelerometer;

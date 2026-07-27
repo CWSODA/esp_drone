@@ -3,7 +3,7 @@
 constexpr float MAGNO_RANGE = 2.0f;
 
 void IMU::init_mag() {
-    magnetometer.init(0x0D);
+    magnetometer.init(MAG_ADDR);
 
     // OSR = 512, 2G range, ODR = 200Hz, continuous mode
     magnetometer.write_reg(0x09, 0b00'00'11'01);
@@ -33,5 +33,5 @@ void IMU::check_mag() {
 
     uint8_t byte;
     magnetometer.read(&byte, 1);
-    printf("Identified Byte: %02X\n", byte);
+    printf("Mag Identified Byte (expect 0xFF): %02X\n", byte);
 }

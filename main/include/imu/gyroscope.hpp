@@ -4,7 +4,7 @@ constexpr float DEG2RAD = 3.1415926535897932384f / 180.0f;
 
 // must init last?
 void IMU::init_gyro() {
-    gyroscope.init(0b1101000);
+    gyroscope.init(GYRO_ADDR);
 
     gyroscope.write_reg(21, 0b0);           // no sample rate divider
     gyroscope.write_reg(22, 0b000'11'000);  // enable measurement
@@ -56,5 +56,5 @@ void IMU::check_gyro() {
 
     uint8_t byte;
     gyroscope.read(&byte, 1);
-    printf("Identified Byte: %02X\n", byte);
+    printf("Gyro Identified Byte (expect 0x68): %02X\n", byte);
 }

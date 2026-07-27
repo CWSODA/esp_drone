@@ -20,9 +20,9 @@ struct Quat {
         Vec3 north = (mag - up * mag.dot(up)).normalize();
         Vec3 west = up.cross(north).normalize();
 
-        up.disp("up");
-        north.disp("north");
-        west.disp("west");
+        // up.disp("up");
+        // north.disp("north");
+        // west.disp("west");
         float rot_mat[3][3] = {
             {north.x, west.x, up.x},
             {north.y, west.y, up.y},
@@ -40,14 +40,15 @@ struct Quat {
         // float x = (east.z - down.y) / (4.0f * w);
         // float y = (down.x - north.z) / (4.0f * w);
         // float z = (north.y - east.x) / (4.0f * w);
-        printf("Trace: %f\n", trace);
+        // printf("Trace: %f\n", trace);
 
         // accel.disp("Original Accel");
         // down.disp("Down");
         // mag.disp("Original Mag");
         // north.disp("North");
-        Quat out = Quat(w, x, y, z);
-        out.disp("init quat");
+        Quat out = Quat(w, x, y, z).normalize();
+        // out.disp("init quat");
+        out.disp();
         return out;
     }
 

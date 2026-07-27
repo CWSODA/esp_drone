@@ -164,9 +164,9 @@ int main() {
         // parse
         static glm::quat q;
 #if ENABLE_SP
-        sp.try_auto_connect();
+        // sp.try_auto_connect();
         parse(sp, q);
-        printf("%f, %f, %f, %f\n", q.w, q.x, q.y, q.z);
+        // printf("%f, %f, %f, %f\n", q.w, q.x, q.y, q.z);
 #endif
 
         // CUBES

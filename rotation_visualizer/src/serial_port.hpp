@@ -7,7 +7,9 @@ using namespace boost;
 #include <mutex>
 #include <thread>
 
-// #define DEBUG_UART
+#define DEBUG_UART
+// #define DEBUG_UART_BYTES
+constexpr int BAUD_RATE = 115200;
 
 class SerialPort {
    public:
@@ -90,8 +92,8 @@ class SerialPort {
 
 // Auto-detect usb ports
 // Returns the first usb matching: '/dev/tty.usb'
-#import <filesystem>
-#import <optional>
+#include <filesystem>
+#include <optional>
 inline std::optional<std::string> detect_usb_port() {
     for (const auto& entry : std::filesystem::directory_iterator("/dev")) {
         // "/dev/tty.usbserial-110"

@@ -9,9 +9,6 @@ using namespace boost;
 #include <iostream>
 #include <mutex>
 
-// #define DEBUG_UART
-// #define DEBUG_UART_BYTES
-
 void SerialPort::config_terminal() {
     // file descriptor, used to configure port
     int fd = serial_port_.native_handle();
@@ -34,7 +31,7 @@ SerialPort::SerialPort(const std::string& port_name) {
     config_terminal();
 
     system::error_code ec;
-    serial_port_.set_option(asio::serial_port_base::baud_rate(115200), ec);
+    serial_port_.set_option(asio::serial_port_base::baud_rate(BAUD_RATE), ec);
     serial_port_.set_option(asio::serial_port_base::character_size(8), ec);
     serial_port_.set_option(asio::serial_port_base::stop_bits(
                                 asio::serial_port_base::stop_bits::one),
@@ -68,7 +65,7 @@ void SerialPort::open(const std::string& path) {
     config_terminal();
 
     system::error_code ec;
-    new_port.set_option(asio::serial_port_base::baud_rate(115200), ec);
+    new_port.set_option(asio::serial_port_base::baud_rate(BAUD_RATE), ec);
     new_port.set_option(asio::serial_port_base::character_size(8), ec);
     new_port.set_option(asio::serial_port_base::stop_bits(
                             asio::serial_port_base::stop_bits::one),
