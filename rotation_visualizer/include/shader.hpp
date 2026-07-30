@@ -14,7 +14,8 @@ class Shader {
     unsigned int ID;
 
    public:
-    Shader(const char* vertexPath, const char* fragmentPath) {
+    Shader(const char* vertexPath, const char* fragmentPath,
+           const char* geomPath = nullptr) {
         std::string vertexCode, fragmentCode;
         std::ifstream vShaderFile, fShaderFile;
         vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);

@@ -79,10 +79,14 @@ class Vec3 {
         return x * other.x + y * other.y + z * other.z;
     }
 
-    void disp(const char* label = nullptr) {
+    void disp(const char* label = nullptr) const {
         if (label == nullptr)
             printf("%f,%f,%f\n", x, y, z);
         else
             printf("%s: %f, %f, %f\n", label, x, y, z);
+    }
+
+    void disp(const char label) const {
+        printf("%c:%.3f,%.3f,%.3f\n", label, x, y, z);
     }
 };

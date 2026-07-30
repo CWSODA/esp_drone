@@ -9,6 +9,9 @@ using namespace boost;
 #include <iostream>
 #include <mutex>
 
+// #define DEBUG_UART
+// #define DEBUG_UART_BYTES
+
 void SerialPort::config_terminal() {
     // file descriptor, used to configure port
     int fd = serial_port_.native_handle();

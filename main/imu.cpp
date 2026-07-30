@@ -26,7 +26,7 @@ constexpr int32_t MAG_CD_US = 1e6 / MAG_FREQ;
 constexpr int32_t ACCEL_FREQ = 60;
 constexpr int32_t ACCEL_CD_US = 1e6 / ACCEL_FREQ;
 
-constexpr int32_t DEBUG_FREQ = 60;
+constexpr int32_t DEBUG_FREQ = 10;
 constexpr int32_t DEBUG_CD_US = 1e6 / DEBUG_FREQ;
 
 void sensor_manager(void* pvParameters) {
@@ -62,7 +62,9 @@ void sensor_manager(void* pvParameters) {
             imu.update_accel_err();
         }
         if (debug_timer.should_run(delta_time_us)) {
-            Quat::from_data(imu.get_accel(), imu.get_mag()).disp();
+            Quat::from_data(imu.get_accel(), imu.get_mag()).disp('q');
+            imu.get_accel().disp('a');
+            imu.get_mag().disp('m');
         }
         taskYIELD();
     }

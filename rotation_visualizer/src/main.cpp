@@ -17,6 +17,7 @@
 #include "mesh.hpp"
 #include "plane.hpp"
 #include "border.hpp"
+#include "line.hpp"
 
 #include "serial_port.hpp"
 #include "parser.hpp"
@@ -106,8 +107,8 @@ int main() {
     glEnableVertexAttribArray(2);
 
     // LOAD SHADERS
-    Shader solid_shader("../src/shaders/vs/light.vert",
-                        "../src/shaders/fs/solid.frag");
+    Shader solid_shader("../src/shaders/vs/3d.vert",
+                        "../src/shaders/fs/single_color.frag");
 
     Shader grid_shader("../src/shaders/vs/pos_only.vert",
                        "../src/shaders/fs/grid.frag");
@@ -162,11 +163,14 @@ int main() {
         plane_mesh.draw(grid_shader);
 
         // parse
-        static glm::quat q;
+        static glm::quat q = glm::quat(1, 0, 0, 0);
+        static glm::vec3 accel;
+        static glm::vec3 mag;
 #if ENABLE_SP
-        // sp.try_auto_connect();
-        parse(sp, q);
-        // printf("%f, %f, %f, %f\n", q.w, q.x, q.y, q.z);
+        sp.try_auto_connect();
+        parse(sp, q, accel, mag);
+        accel = glm::normalize(accel);
+        mag = glm::normalize(mag);
 #endif
 
         // CUBES
@@ -187,18 +191,24 @@ int main() {
             glm::vec3(0, 0, 1),
         };
 
-        glBindVertexArray(cube_VAO);
-        for (int idx = 0; idx < 3; idx++) {
-            glm::mat4 block_model = block_models[idx];
-            glm::vec3 color = colors[idx];
+        static LineRenderer liner;
+        solid_shader.use();
+        solid_shader.set_mat4("view", view);
+        solid_shader.set_mat4("projection", projection);
+        solid_shader.set_mat4("model", glm::mat4(1.0f));
 
-            solid_shader.use();
-            solid_shader.set_mat4("view", view);
-            solid_shader.set_mat4("model", block_model);
-            solid_shader.set_mat4("projection", projection);
-            solid_shader.set_vec3("color", color);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        solid_shader.set_vec3("color", glm::vec3(1, 0, 0));
+        liner.draw(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0));
+
+        solid_shader.set_vec3("color", glm::vec3(0, 1, 0));
+        liner.draw(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+        solid_shader.set_vec3("color", glm::vec3(0, 0, 1));
+        liner.draw(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
+
+        // glm::vec3 x = q * glm::vec3(1, 0, 0);
+        // glm::vec3 y = q * glm::vec3(0, 1, 0);
+        // glm::vec3 z = q * glm::vec3(0, 0, 1);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

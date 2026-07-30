@@ -7,8 +7,6 @@ using namespace boost;
 #include <mutex>
 #include <thread>
 
-#define DEBUG_UART
-// #define DEBUG_UART_BYTES
 constexpr int BAUD_RATE = 115200;
 
 class SerialPort {

@@ -46,10 +46,7 @@ struct Quat {
         // down.disp("Down");
         // mag.disp("Original Mag");
         // north.disp("North");
-        Quat out = Quat(w, x, y, z).normalize();
-        // out.disp("init quat");
-        out.disp();
-        return out;
+        return Quat(w, x, y, z).normalize();
     }
 
     void operator+=(const Quat& other) {
@@ -106,5 +103,9 @@ struct Quat {
             printf("%f,%f,%f,%f\n", w, x, y, z);
         else
             printf("%s: %f, %f, %f, %f\n", label, w, x, y, z);
+    }
+
+    void disp(const char label) const {
+        printf("%c:%.3f,%.3f,%.3f,%.3f\n", label, w, x, y, z);
     }
 };
