@@ -113,6 +113,8 @@ int main() {
     Shader grid_shader("../src/shaders/vs/pos_only.vert",
                        "../src/shaders/fs/grid.frag");
 
+    Liner liner(cube_VAO, cube_VBO, solid_shader);
+
     // camera settings
     camera.position = glm::vec3(0.0f, 1.0f, 4.0f);
     camera.camera_type = CAMERA_TYPE::FLY;
@@ -177,34 +179,24 @@ int main() {
         float side = 0.05f;
         float length = 2.0f;
         glm::mat4 base = glm::mat4_cast(q);
-        glm::mat4 block_models[] = {
-            glm::scale(glm::translate(base, glm::vec3(length / 2, 0, 0)),
-                       glm::vec3(length, side, side)),
-            glm::scale(glm::translate(base, glm::vec3(0, length / 2, 0)),
-                       glm::vec3(side, length, side)),
-            glm::scale(glm::translate(base, glm::vec3(0, 0, length / 2)),
-                       glm::vec3(side, side, length)),
+
+        glm::vec3 dirs[] = {
+            glm::vec3(1, 0, 0),
+            glm::vec3(0, 1, 0),
+            glm::vec3(0, 0, 1),
         };
         glm::vec3 colors[] = {
             glm::vec3(1, 0, 0),
             glm::vec3(0, 1, 0),
             glm::vec3(0, 0, 1),
         };
+        for (int idx = 0; idx < 3; idx++) {
+            liner.draw(glm::vec3(0, 0, 0), dirs[idx], view, projection,
+                       colors[idx]);
+        }
 
-        static LineRenderer liner;
-        solid_shader.use();
-        solid_shader.set_mat4("view", view);
-        solid_shader.set_mat4("projection", projection);
-        solid_shader.set_mat4("model", glm::mat4(1.0f));
-
-        solid_shader.set_vec3("color", glm::vec3(1, 0, 0));
-        liner.draw(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0));
-
-        solid_shader.set_vec3("color", glm::vec3(0, 1, 0));
-        liner.draw(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-        solid_shader.set_vec3("color", glm::vec3(0, 0, 1));
-        liner.draw(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
+        liner.draw(glm::vec3(1, 1, 1), glm::vec3(2, 2, 2), view, projection,
+                   glm::vec3(1, 1, 0));
 
         // glm::vec3 x = q * glm::vec3(1, 0, 0);
         // glm::vec3 y = q * glm::vec3(0, 1, 0);
