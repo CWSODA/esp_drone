@@ -13,6 +13,10 @@ constexpr uint16_t GYRO_ADDR = 0b1101000;
 constexpr uint16_t ACCEL_ADDR = 0x53;  // 0x1D or 0x53
 constexpr uint16_t MAG_ADDR = 0x0D;
 
+inline float MAHONY_MAG_WEIGHT = 0.1f;
+inline float MAHONY_P = 1.0f;
+inline float MAHONY_I = 1.0f;
+
 #define DEBUG_ACCEL false
 #define DEBUG_MAG false
 #define DEBUG_GYRO false

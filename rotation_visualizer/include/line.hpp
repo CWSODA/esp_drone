@@ -10,9 +10,15 @@ class Liner {
     Liner(unsigned int vao, unsigned int vbo, Shader shader)
         : shader_(shader), vao_(vao), vbo_(vbo) {}
 
+    void draw(const glm::vec3 dir_vec, const glm::mat4& view,
+              const glm::mat4& projection, const glm::vec3 color,
+              const float thickness = 0.05f) {
+        this->draw(glm::vec3(0, 0, 0), dir_vec, view, projection, color,
+                   thickness);
+    }
     void draw(const glm::vec3 a, const glm::vec3 b, const glm::mat4& view,
               const glm::mat4& projection, const glm::vec3 color,
-              const float thickness = 0.1f) {
+              const float thickness = 0.05f) {
         shader_.use();
         shader_.set_mat4("view", view);
         shader_.set_mat4("projection", projection);

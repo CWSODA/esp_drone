@@ -26,8 +26,8 @@ void parse(SerialPort& sp, glm::quat& quat, glm::vec3& accel, glm::vec3& mag) {
             // Check for label
             switch (line.at(0)) {
                 case 'q': {
-                    int n = sscanf(line.data(), "q:%f,%f,%f,%f\n", &val[0],
-                                   &val[1], &val[2], &val[3]);
+                    int n =
+                        sscanf(line.data(), "q:%f,%f,%f,%f\n", &val[0], &val[1], &val[2], &val[3]);
                     if (n == 4) {
                         // update rot
                         quat = glm::quat(val[0], val[1], val[2], val[3]);
@@ -35,23 +35,21 @@ void parse(SerialPort& sp, glm::quat& quat, glm::vec3& accel, glm::vec3& mag) {
                     break;
                 }
                 case 'a': {
-                    int n = sscanf(line.data(), "a:%f,%f,%f\n", &val[0],
-                                   &val[1], &val[2]);
+                    int n = sscanf(line.data(), "a:%f,%f,%f\n", &val[0], &val[1], &val[2]);
                     if (n == 3) {
                         accel = glm::vec3(val[0], val[1], val[2]);
                     }
                     break;
                 }
                 case 'm': {
-                    int n = sscanf(line.data(), "m:%f,%f,%f\n", &val[0],
-                                   &val[1], &val[2]);
+                    int n = sscanf(line.data(), "m:%f,%f,%f\n", &val[0], &val[1], &val[2]);
                     if (n == 3) {
                         mag = glm::vec3(val[0], val[1], val[2]);
                     }
                     break;
                 }
                 default:
-                    continue;
+                    printf("Line: %s\n", line.data());
             }
 
             if (rx_buffer.size() > idx + 1) {

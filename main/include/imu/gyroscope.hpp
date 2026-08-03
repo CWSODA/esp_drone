@@ -38,6 +38,7 @@ void IMU::update_gyro(const int64_t delta_time_us) {
         return;
     }
     gyro_data -= offset + total_err;  // remove offset and PI error
+    // gyro_data -= offset;  // remove offset and PI error
 
     float delta_time_s = delta_time_us * 1e-6;
 
@@ -45,7 +46,6 @@ void IMU::update_gyro(const int64_t delta_time_us) {
     Quat dq = (dw * quat) * 0.5f;
     Quat delta_q = dq * delta_time_s * DEG2RAD;
     quat = (quat + delta_q).normalize();
-    quat.disp_angle_vec();
 }
 
 // should be device addr of 0x68

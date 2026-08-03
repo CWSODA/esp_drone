@@ -13,10 +13,6 @@
 // Gyroscope: ITG3205, (1 or 8 kHz)
 // Accelerometer: ADXL345, (800 Hz max)
 
-constexpr float MAHONY_MAG_WEIGHT = 0.1f;
-constexpr float MAHONY_P = 1.0f;
-constexpr float MAHONY_I = 1.0f;
-
 constexpr int32_t GYRO_FREQ = 8e3;
 constexpr int32_t GYRO_CD_US = 1e6 / GYRO_FREQ;
 
@@ -50,8 +46,8 @@ void sensor_manager(void* pvParameters) {
         // can optimize by getting time once and passing to each function
         int64_t delta_time_us;
         if (gyro_timer.should_run(delta_time_us)) {
-            // imu.read_gyro();
-            // imu.update_gyro(delta_time_us);
+            imu.read_gyro();
+            imu.update_gyro(delta_time_us);
         }
         if (mag_timer.should_run(delta_time_us)) {
             imu.read_mag();
@@ -62,20 +58,23 @@ void sensor_manager(void* pvParameters) {
             imu.update_accel_err();
         }
         if (debug_timer.should_run(delta_time_us)) {
-            Quat::from_data(imu.get_accel(), imu.get_mag()).disp('q');
+            // Quat::from_data(imu.get_accel(), imu.get_mag()).disp('q');
             imu.get_accel().disp('a');
             imu.get_mag().disp('m');
+            imu.get_quat().disp('q');
         }
         taskYIELD();
     }
 }
 
+/* ------------------------------------------------------ */
+/*                   Error Calculations                   */
+/* ------------------------------------------------------ */
 void IMU::update_accel_err() {
     Vec3 down = accel_data.normalize();
 
     // predicted orientation
-    Vec3 p_down =
-        (quat * Quat(0, 0, -1) * quat.conjugate()).to_vec().normalize();
+    Vec3 p_down = (quat * Quat(0, 0, -1) * quat.conjugate()).to_vec().normalize();
 
     accel_err = p_down.cross(down);  // check order later
 
@@ -83,13 +82,13 @@ void IMU::update_accel_err() {
 }
 
 void IMU::update_mag_err() {
+    // not north, need to remove z component!!!
     Vec3 north = mag_data.normalize();
 
     // predicted orientation
-    Vec3 p_north =
-        (quat * Quat(1, 0, 0) * quat.conjugate()).to_vec().normalize();
+    Vec3 p_north = (quat * Quat(1, 0, 0) * quat.conjugate()).to_vec().normalize();
 
-    mag_err = p_north.cross(north);  // check order later
+    mag_err = -p_north.cross(north);  // check order later
 
     update_error();
 }
@@ -100,6 +99,7 @@ void IMU::update_error() {
     total_err = err * MAHONY_P;
 }
 
+// simple pitch calculator with accelerometer data
 Vec3 IMU::calc_alt() {
     // pitch with accelerometer
     float m = sqrtf(accel_data.y * accel_data.y + accel_data.z * accel_data.z);

@@ -8,6 +8,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+// IMGUI
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "lib.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
@@ -21,28 +26,21 @@
 
 #include "serial_port.hpp"
 #include "parser.hpp"
+#include "input.hpp"
 
 #define WIDTH 800
 #define HEIGHT 600
 
-const float mix_increment = 0.005;
-float mix = 0.5f;
-
 int win_width, win_height;
 
 // timings
-float delta_time = 0;
 float last_frame = 0;
-
-// mouse
-float mouse_lastX = 400;
-float mouse_lastY = 300;
-bool is_first_mouse = true;
-float mouse_sensitivity = 0.05;
 
 #define ENABLE_SP true
 
-Camera camera{};
+// includes camera, delta_time
+InputData input_data;
+Camera& camera = input_data.camera;
 
 int main() {
     if (!glfwInit()) {
@@ -55,8 +53,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window =
-        glfwCreateWindow(WIDTH, HEIGHT, "StartingOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "StartingOpenGL", NULL, NULL);
 
     if (window == NULL) {
         const char* description;
@@ -80,6 +77,12 @@ int main() {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     gladLoadGL();
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& imgui_io = ImGui::GetIO();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init();
+
     /* END OF WINDOW CREATION */
 
     // Vertex Array Obj, Vertex Buffer Obj, Element Buffer Obj
@@ -90,28 +93,22 @@ int main() {
 
     glBindBuffer(GL_ARRAY_BUFFER, cube_VBO);
     // position
-    glBufferData(GL_ARRAY_BUFFER, sizeof(tex_norm_cube), tex_norm_cube,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(tex_norm_cube), tex_norm_cube, GL_STATIC_DRAW);
 
     // index, vector size, type, should normalize, stride, offset
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // normals
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
     // texture coordinates
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     // LOAD SHADERS
-    Shader solid_shader("../src/shaders/vs/3d.vert",
-                        "../src/shaders/fs/single_color.frag");
+    Shader solid_shader("../src/shaders/vs/3d.vert", "../src/shaders/fs/single_color.frag");
 
-    Shader grid_shader("../src/shaders/vs/pos_only.vert",
-                       "../src/shaders/fs/grid.frag");
+    Shader grid_shader("../src/shaders/vs/pos_only.vert", "../src/shaders/fs/grid.frag");
 
     Liner liner(cube_VAO, cube_VBO, solid_shader);
 
@@ -137,10 +134,10 @@ int main() {
 
     while (!glfwWindowShouldClose(window)) {
         float current_frame = glfwGetTime();
-        delta_time = current_frame - last_frame;
+        input_data.delta_time = current_frame - last_frame;
         last_frame = current_frame;
 
-        process_input(window);
+        process_input(window, sp, input_data);
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -148,9 +145,8 @@ int main() {
 
         // get matrices
         glm::mat4 view = camera.get_view_matrix();
-        glm::mat4 projection =
-            glm::perspective(glm::radians(camera.fov),
-                             (float)win_width / win_height, 0.1f, 1000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.fov),
+                                                (float)win_width / win_height, 0.1f, 1000.0f);
 
         // GRID
         grid_shader.use();
@@ -173,13 +169,10 @@ int main() {
         parse(sp, q, accel, mag);
         accel = glm::normalize(accel);
         mag = glm::normalize(mag);
+        // disp(q, "Quat");
 #endif
 
-        // CUBES
-        float side = 0.05f;
-        float length = 2.0f;
-        glm::mat4 base = glm::mat4_cast(q);
-
+        // cardinal directions and colors
         glm::vec3 dirs[] = {
             glm::vec3(1, 0, 0),
             glm::vec3(0, 1, 0),
@@ -191,16 +184,37 @@ int main() {
             glm::vec3(0, 0, 1),
         };
         for (int idx = 0; idx < 3; idx++) {
-            liner.draw(glm::vec3(0, 0, 0), dirs[idx], view, projection,
-                       colors[idx]);
+            // rotate and draw
+            liner.draw(gl_space(q * dirs[idx]), view, projection, colors[idx]);
         }
 
-        liner.draw(glm::vec3(1, 1, 1), glm::vec3(2, 2, 2), view, projection,
-                   glm::vec3(1, 1, 0));
+        liner.draw(gl_space(accel * 2.0f), view, projection, glm::vec3(1, 1, 0), 0.02f);
+        liner.draw(gl_space(mag * 2.0f), view, projection, glm::vec3(1, 0, 1), 0.02f);
 
-        // glm::vec3 x = q * glm::vec3(1, 0, 0);
-        // glm::vec3 y = q * glm::vec3(0, 1, 0);
-        // glm::vec3 z = q * glm::vec3(0, 0, 1);
+        /* ------------------------ IMGUI ----------------------- */
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        static float mahony_P = 1.0f;
+        static float mahony_mag_weight = 1.0f;
+        if (ImGui::Begin("Mahony PI Settings")) {
+            if (ImGui::SliderFloat("P", &mahony_P, 0.0f, 100.0f, "%.4f")) {
+                // make sure PID values are non-negative
+                mahony_P = std::max(mahony_P, 0.0f);
+                sp.write_float(mahony_P, 'p');
+            }
+            if (ImGui::SliderFloat("Mag Weight", &mahony_mag_weight, 0.0f, 1.0f, "%.4f")) {
+                // make sure PID values are non-negative
+                mahony_mag_weight = std::max(mahony_mag_weight, 0.0f);
+                sp.write_float(mahony_mag_weight, 'm');
+            }
+            ImGui::End();
+        }
+
+        // IMGUI RENDER
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -223,71 +237,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     win_height = height;
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    float x_offset = 0, y_offset = 0;
-    if (is_first_mouse) {
-        is_first_mouse = false;
-    } else {
-        x_offset = xpos - mouse_lastX;
-        y_offset = mouse_lastY - ypos;
-    }
-
-    mouse_lastX = xpos;
-    mouse_lastY = ypos;
-
-    camera.process_mouse_movement(x_offset, y_offset);
-}
-
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
     camera.process_mouse_scroll(y_offset);
-}
-
-void process_input(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        if (mix > 0) {
-            mix -= mix_increment;
-        }
-    }
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        if (mix < 1) {
-            mix += mix_increment;
-        }
-    }
-
-    bool is_forward = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
-    bool is_backward = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
-    bool is_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
-    bool is_right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
-    bool is_shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
-    bool is_up = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-    bool is_down = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
-    camera.process_keys(is_forward, is_backward, is_left, is_right, is_shift,
-                        is_up, is_down, delta_time);
-
-    // toggles
-    static bool is_wireframe = false;
-    static bool is_cursor = false;
-    static bool last_z = false;
-    static bool last_c = false;
-
-    bool current_z = glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS;
-    bool current_c = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
-
-    if (!last_z && current_z) {
-        is_wireframe = !is_wireframe;
-        glPolygonMode(GL_FRONT_AND_BACK, is_wireframe ? GL_LINE : GL_FILL);
-    }
-    if (!last_c && current_c) {
-        is_cursor = !is_cursor;
-        is_first_mouse = true;
-        glfwSetInputMode(window, GLFW_CURSOR,
-                         is_cursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
-    }
-
-    last_z = current_z;
-    last_c = current_c;
 }

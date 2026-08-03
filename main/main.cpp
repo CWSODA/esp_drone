@@ -5,7 +5,10 @@
 
 #include "i2c.hpp"
 #include "motor.cpp"
-#include "imu.cpp"
+#include "imu.hpp"
+#include "input.hpp"
+
+#include <string>
 
 extern "C" {
 void app_main(void) {
@@ -24,15 +27,14 @@ void app_main(void) {
 
     // set up sensors
     TaskHandle_t sensor_task;
-    xTaskCreatePinnedToCore(sensor_manager, "sensors", 4096, NULL, 1,
-                            &sensor_task, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(sensor_manager, "sensors", 4096, NULL, 1, &sensor_task, tskNO_AFFINITY);
 
     // MotorCtrl motor_ctrl;
     // motor_ctrl.arm_motors();
 
     while (true) {
-        // printf("HI\n");
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        process_input();
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 }

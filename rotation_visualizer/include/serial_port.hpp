@@ -60,6 +60,17 @@ class SerialPort {
     void write_byte(uint8_t c);
     void write_bytes(uint8_t* data, size_t n);
 
+    void write_float(float val, char label = 0) {
+        char buf[64];
+        if (label == 0) {
+            snprintf(buf, sizeof(buf), "%.3f\n", val);
+        } else {
+            snprintf(buf, sizeof(buf), "%c:%.3f\n", label, val);
+        }
+        std::string str = std::string(buf);
+        this->write(str);
+    }
+
     ~SerialPort() {
         if (serial_port_.is_open()) {
             serial_port_.cancel();
@@ -82,8 +93,7 @@ class SerialPort {
     std::string rx_buffer_;
 
     std::string input_buffer_ = std::string(1024, '\0');
-    asio::mutable_buffer asio_buffer_ =
-        asio::buffer(input_buffer_.data(), input_buffer_.size());
+    asio::mutable_buffer asio_buffer_ = asio::buffer(input_buffer_.data(), input_buffer_.size());
 
     void async_read();
 };
