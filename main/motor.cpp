@@ -7,7 +7,7 @@
 Each motor uses approximately 2.2A at 5V
 */
 
-constexpr uint32_t ARM_PULSE_WIDTH = 800;  // in µs
+constexpr uint32_t ARM_PULSE_WIDTH = 900;  // in µs
 
 constexpr int FL_PIN = 4;
 constexpr int FR_PIN = 4;
@@ -32,7 +32,7 @@ class MotorCtrl {
         for (auto& motor : motor_array_) {
             motor.set_us(ARM_PULSE_WIDTH);
         }
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 
     void gradient_power() {
